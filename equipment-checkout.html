@@ -1,538 +1,482 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#1a73e8">
-    <meta name="description" content="MV Power Equipment Checkout">
-    <link rel="manifest" href="manifest.json">
-    <title>Equipment Checkout</title>
-    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        .header {
-            background: white;
-            padding: 20px;
-            border-radius: 15px 15px 0 0;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-
-        .header h1 {
-            color: #333;
-            font-size: 24px;
-            margin-bottom: 5px;
-        }
-
-        .header .company {
-            color: #666;
-            font-size: 14px;
-        }
-
-        .user-info {
-            background: #f8f9fa;
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #e0e0e0;
-        }
-
-        .user-name {
-            font-weight: 600;
-            color: #333;
-        }
-
-        .edit-btn {
-            background: #1a73e8;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            font-size: 14px;
-            cursor: pointer;
-            font-weight: 500;
-        }
-
-        .edit-btn:active {
-            background: #1557b0;
-        }
-
-        .content {
-            background: white;
-            padding: 30px 20px;
-            border-radius: 0 0 15px 15px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-
-        .login-form {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .input-group label {
-            font-weight: 600;
-            color: #333;
-            font-size: 14px;
-        }
-
-        .input-group input {
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.3s;
-        }
-
-        .input-group input:focus {
-            outline: none;
-            border-color: #1a73e8;
-        }
-
-        .btn-primary {
-            background: #1a73e8;
-            color: white;
-            border: none;
-            padding: 14px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-
-        .btn-primary:active {
-            background: #1557b0;
-        }
-
-        .btn-primary:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-
-        #scanner-section {
-            display: none;
-        }
-
-        #reader {
-            border-radius: 10px;
-            overflow: hidden;
-            margin-bottom: 20px;
-            border: 3px solid #e0e0e0;
-        }
-
-        .scan-btn {
-            width: 100%;
-            background: #34a853;
-            color: white;
-            border: none;
-            padding: 16px;
-            border-radius: 8px;
-            font-size: 18px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-bottom: 20px;
-        }
-
-        .scan-btn:active {
-            background: #2d8e47;
-        }
-
-        .scan-btn.scanning {
-            background: #ea4335;
-        }
-
-        .status {
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            font-weight: 500;
-            display: none;
-        }
-
-        .status.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-            display: block;
-        }
-
-        .status.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-            display: block;
-        }
-
-        .status.info {
-            background: #d1ecf1;
-            color: #0c5460;
-            border: 1px solid #bee5eb;
-            display: block;
-        }
-
-        .last-scan {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 20px;
-            display: none;
-        }
-
-        .last-scan.show {
-            display: block;
-        }
-
-        .last-scan h3 {
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 10px;
-        }
-
-        .last-scan .details {
-            font-size: 16px;
-            color: #333;
-            line-height: 1.6;
-        }
-
-        .settings {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 2px solid #e0e0e0;
-        }
-
-        .settings h3 {
-            font-size: 16px;
-            margin-bottom: 15px;
-            color: #333;
-        }
-
-        .settings input {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 14px;
-            margin-bottom: 10px;
-        }
-
-        .settings small {
-            color: #666;
-            font-size: 12px;
-            display: block;
-            margin-bottom: 15px;
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        @media (max-width: 480px) {
-            body {
-                padding: 10px;
-            }
-            
-            .header h1 {
-                font-size: 20px;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1a73e8">
+  <meta name="description" content="MV Power Equipment Checkout">
+  <link rel="manifest" href="manifest.json">
+  <title>Equipment Checkout</title>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container { max-width: 600px; margin: 0 auto; }
+    .header {
+      background: white;
+      padding: 20px;
+      border-radius: 15px 15px 0 0;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .header h1 { color: #333; font-size: 24px; margin-bottom: 5px; }
+    .header .company { color: #666; font-size: 14px; }
+    .user-info {
+      background: #f8f9fa;
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    .user-name { font-weight: 600; color: #333; }
+    .edit-btn {
+      background: #1a73e8;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    .edit-btn:active { background: #1557b0; }
+    .content {
+      background: white;
+      padding: 30px 20px;
+      border-radius: 0 0 15px 15px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .login-form { display: flex; flex-direction: column; gap: 15px; }
+    .input-group { display: flex; flex-direction: column; gap: 5px; }
+    .input-group label { font-weight: 600; color: #333; font-size: 14px; }
+    .input-group input {
+      padding: 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: border-color 0.3s;
+    }
+    .input-group input:focus { outline: none; border-color: #1a73e8; }
+    .btn-primary {
+      background: #1a73e8;
+      color: white;
+      border: none;
+      padding: 14px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    .btn-primary:active { background: #1557b0; }
+    .btn-primary:disabled { background: #ccc; cursor: not-allowed; }
+    #scanner-section { display: none; }
+    #reader {
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 20px;
+      border: 3px solid #e0e0e0;
+    }
+    .scan-btn {
+      width: 100%;
+      background: #34a853;
+      color: white;
+      border: none;
+      padding: 16px;
+      border-radius: 8px;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 20px;
+    }
+    .scan-btn:active { background: #2d8e47; }
+    .scan-btn.scanning { background: #ea4335; }
+    .status {
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      font-weight: 500;
+      display: none;
+    }
+    .status.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+      display: block;
+    }
+    .status.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+      display: block;
+    }
+    .status.info {
+      background: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+      display: block;
+    }
+    .last-scan {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 20px;
+      display: none;
+    }
+    .last-scan.show { display: block; }
+    .last-scan h3 { font-size: 14px; color: #666; margin-bottom: 10px; }
+    .last-scan .details { font-size: 16px; color: #333; line-height: 1.6; }
+    .settings {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 2px solid #e0e0e0;
+    }
+    .settings h3 { font-size: 16px; margin-bottom: 15px; color: #333; }
+    .settings input {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+    .settings small {
+      color: #666;
+      font-size: 12px;
+      display: block;
+      margin-bottom: 15px;
+    }
+    .hidden { display: none; }
+    @media (max-width: 480px) {
+      body { padding: 10px; }
+      .header h1 { font-size: 20px; }
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>Equipment Checkout</h1>
-            <div class="company">MV Power Solutions LLC</div>
-        </div>
-
-        <div id="user-bar" class="user-info hidden">
-            <div class="user-name" id="display-name"></div>
-            <button class="edit-btn" onclick="editUser()">Edit</button>
-        </div>
-
-        <div class="content">
-            <!-- Login Form -->
-            <div id="login-section">
-                <h2 style="margin-bottom: 20px; color: #333;">Enter Your Name</h2>
-                <form class="login-form" onsubmit="saveUser(event)">
-                    <div class="input-group">
-                        <label for="first-name">First Name</label>
-                        <input type="text" id="first-name" required autocomplete="given-name">
-                    </div>
-                    <div class="input-group">
-                        <label for="last-name">Last Name</label>
-                        <input type="text" id="last-name" required autocomplete="family-name">
-                    </div>
-                    <button type="submit" class="btn-primary">Save & Continue</button>
-                </form>
-            </div>
-
-            <!-- Scanner Section -->
-            <div id="scanner-section">
-                <div id="status-message" class="status"></div>
-                
-                <button class="scan-btn" id="scan-toggle" onclick="toggleScanner()">
-                    Start Scanning
-                </button>
-
-                <div id="reader"></div>
-
-                <div id="last-scan" class="last-scan">
-                    <h3>Last Checkout:</h3>
-                    <div class="details" id="last-scan-details"></div>
-                </div>
-
-                <!-- Settings -->
-                <div class="settings">
-                    <h3>⚙️ Settings</h3>
-                    <label style="font-size: 14px; color: #333; font-weight: 600; display: block; margin-bottom: 5px;">
-                        Google Apps Script URL
-                    </label>
-                    <input 
-                        type="url" 
-                        id="script-url" 
-                        placeholder="https://script.google.com/macros/s/..."
-                        value="">
-                    <small>Paste your Google Apps Script web app URL here (see setup instructions)</small>
-                    <button class="btn-primary" onclick="saveSettings()">Save Settings</button>
-                </div>
-            </div>
-        </div>
+  <div class="container">
+    <div class="header">
+      <h1>Equipment Checkout</h1>
+      <div class="company">MV Power Solutions LLC</div>
     </div>
 
-    <script>
-        let html5QrCode = null;
-        let isScanning = false;
+    <div id="user-bar" class="user-info hidden">
+      <div class="user-name" id="display-name"></div>
+      <button class="edit-btn" onclick="editUser()">Edit</button>
+    </div>
 
-        // Default Google Apps Script URL (can be edited in Settings)
-        const DEFAULT_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzbQcYm5bdv3mwYAcbnyB3C6k4OGR9oAm5yWDUEU3EZdQG9gmqylpQXy9IXKc2vfiSN/exec';
-        // Column header to target in the sheet (script should locate this header dynamically)
-        const CHECKED_OUT_BY_HEADER = 'Checked Out By';
+    <div class="content">
+      <!-- Login Form -->
+      <div id="login-section">
+        <h2 style="margin-bottom: 20px; color: #333;">Enter Your Name</h2>
+        <form class="login-form" onsubmit="saveUser(event)">
+          <div class="input-group">
+            <label for="first-name">First Name</label>
+            <input type="text" id="first-name" required autocomplete="given-name">
+          </div>
+          <div class="input-group">
+            <label for="last-name">Last Name</label>
+            <input type="text" id="last-name" required autocomplete="family-name">
+          </div>
+          <button type="submit" class="btn-primary">Save &amp; Continue</button>
+        </form>
+      </div>
 
-        let scriptUrl = DEFAULT_SCRIPT_URL;
+      <!-- Scanner Section -->
+      <div id="scanner-section">
+        <div id="status-message" class="status"></div>
 
-        // Initialize app
-        window.onload = function() {
-            loadSettings();
-            checkUser();
-        };
+        <button class="scan-btn" id="scan-toggle" onclick="toggleScanner()">
+          Start Scanning
+        </button>
 
-        function checkUser() {
-            const firstName = localStorage.getItem('firstName');
-            const lastName = localStorage.getItem('lastName');
-            
-            if (firstName && lastName) {
-                document.getElementById('display-name').textContent = `${firstName} ${lastName}`;
-                document.getElementById('login-section').classList.add('hidden');
-                document.getElementById('scanner-section').style.display = 'block';
-                document.getElementById('user-bar').classList.remove('hidden');
-            }
+        <div id="reader"></div>
+
+        <div id="last-scan" class="last-scan">
+          <h3>Last Checkout:</h3>
+          <div class="details" id="last-scan-details"></div>
+        </div>
+
+        <!-- Settings -->
+        <div class="settings">
+          <h3>⚙️ Settings</h3>
+
+          <label style="font-size: 14px; color: #333; font-weight: 600; display: block; margin-bottom: 5px;">
+            Google Apps Script URL
+          </label>
+          <input type="url" id="script-url" placeholder="https://script.google.com/macros/s/..." value="">
+          <small>Paste your Google Apps Script web app URL here (can be left as default).</small>
+
+          <label style="font-size: 14px; color: #333; font-weight: 600; display: block; margin: 15px 0 5px;">
+            API Key (recommended)
+          </label>
+          <input type="password" id="auth-token" placeholder="Enter shared AUTH_TOKEN">
+          <small>If your Apps Script requires AUTH_TOKEN, enter it here so only this app can update the sheet.</small>
+
+          <button class="btn-primary" onclick="saveSettings()">Save Settings</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let html5QrCode = null;
+    let isScanning = false;
+
+    // Default Google Apps Script URL (can be edited in Settings)
+    const DEFAULT_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzbQcYm5bdv3mwYAcbnyB3C6k4OGR9oAm5yWDUEU3EZdQG9gmqylpQXy9IXKc2vfiSN/exec';
+    // Column header to target in the sheet (script locates this header dynamically)
+    const CHECKED_OUT_BY_HEADER = 'Checked Out By';
+
+    // Protected name gate
+    const PROTECTED_FULL_NAME_NORM = 'ricky gonzales';
+    const PROTECTED_PASSWORD = 'AAAbattery';
+
+    let scriptUrl = DEFAULT_SCRIPT_URL;
+    let authToken = '';
+
+    window.onload = function() {
+      loadSettings();
+      checkUser();
+    };
+
+    function normName(name) {
+      return String(name || '')
+        .toLowerCase()
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    function getOrCreateDeviceId() {
+      let id = localStorage.getItem('deviceId');
+      if (!id) {
+        id = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + '-' + Math.random().toString(16).slice(2));
+        localStorage.setItem('deviceId', id);
+      }
+      return id;
+    }
+
+    async function sha256Hex(str) {
+      const enc = new TextEncoder();
+      const buf = await crypto.subtle.digest('SHA-256', enc.encode(str));
+      const arr = Array.from(new Uint8Array(buf));
+      return arr.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    function checkUser() {
+      const firstName = localStorage.getItem('firstName');
+      const lastName = localStorage.getItem('lastName');
+
+      if (firstName && lastName) {
+        document.getElementById('display-name').textContent = `${firstName} ${lastName}`;
+        document.getElementById('login-section').classList.add('hidden');
+        document.getElementById('scanner-section').style.display = 'block';
+        document.getElementById('user-bar').classList.remove('hidden');
+      }
+    }
+
+    async function saveUser(event) {
+      event.preventDefault();
+      const firstName = document.getElementById('first-name').value.trim();
+      const lastName = document.getElementById('last-name').value.trim();
+      const fullName = `${firstName} ${lastName}`.trim();
+
+      const fullNorm = normName(fullName);
+      const wasProtected = normName(localStorage.getItem('firstName') + ' ' + localStorage.getItem('lastName')) === PROTECTED_FULL_NAME_NORM;
+
+      if (fullNorm === PROTECTED_FULL_NAME_NORM) {
+        // Only prompt if we haven't already authorized THIS device for the protected name.
+        const okFor = localStorage.getItem('rickyAuthFor');
+        const existingToken = localStorage.getItem('rickyAuthToken');
+        if (!(okFor === PROTECTED_FULL_NAME_NORM && existingToken)) {
+          const pw = prompt('Password required for "Ricky Gonzales":');
+          if (pw !== PROTECTED_PASSWORD) {
+            showStatus('Incorrect password. Name not saved.', 'error');
+            return;
+          }
+          const deviceId = getOrCreateDeviceId();
+          const token = await sha256Hex(deviceId + ':' + PROTECTED_PASSWORD);
+          localStorage.setItem('rickyAuthFor', PROTECTED_FULL_NAME_NORM);
+          localStorage.setItem('rickyAuthToken', token);
         }
-
-        function saveUser(event) {
-            event.preventDefault();
-            const firstName = document.getElementById('first-name').value.trim();
-            const lastName = document.getElementById('last-name').value.trim();
-            
-            localStorage.setItem('firstName', firstName);
-            localStorage.setItem('lastName', lastName);
-            
-            checkUser();
+      } else {
+        // If user changes away from Ricky, clear the token so next time Ricky requires password again.
+        if (localStorage.getItem('rickyAuthFor') === PROTECTED_FULL_NAME_NORM) {
+          localStorage.removeItem('rickyAuthFor');
+          localStorage.removeItem('rickyAuthToken');
         }
+      }
 
-        function editUser() {
-            const firstName = localStorage.getItem('firstName');
-            const lastName = localStorage.getItem('lastName');
-            
-            document.getElementById('first-name').value = firstName;
-            document.getElementById('last-name').value = lastName;
-            
-            document.getElementById('scanner-section').style.display = 'none';
-            document.getElementById('login-section').classList.remove('hidden');
-            document.getElementById('user-bar').classList.add('hidden');
-            
-            if (isScanning) {
-                stopScanning();
-            }
+      localStorage.setItem('firstName', firstName);
+      localStorage.setItem('lastName', lastName);
+
+      checkUser();
+      showStatus('Name saved.', 'success');
+    }
+
+    function editUser() {
+      const firstName = localStorage.getItem('firstName') || '';
+      const lastName = localStorage.getItem('lastName') || '';
+
+      document.getElementById('first-name').value = firstName;
+      document.getElementById('last-name').value = lastName;
+
+      document.getElementById('scanner-section').style.display = 'none';
+      document.getElementById('login-section').classList.remove('hidden');
+      document.getElementById('user-bar').classList.add('hidden');
+
+      if (isScanning) stopScanning();
+    }
+
+    function loadSettings() {
+      const savedUrl = localStorage.getItem('scriptUrl');
+      const savedToken = localStorage.getItem('authToken');
+      scriptUrl = savedUrl || DEFAULT_SCRIPT_URL;
+      authToken = savedToken || '';
+      document.getElementById('script-url').value = scriptUrl;
+      document.getElementById('auth-token').value = authToken;
+    }
+
+    function saveSettings() {
+      const url = document.getElementById('script-url').value.trim();
+      const token = document.getElementById('auth-token').value.trim();
+
+      scriptUrl = url || DEFAULT_SCRIPT_URL;
+      authToken = token;
+
+      if (url) localStorage.setItem('scriptUrl', url); else localStorage.removeItem('scriptUrl');
+      if (token) localStorage.setItem('authToken', token); else localStorage.removeItem('authToken');
+
+      document.getElementById('script-url').value = scriptUrl;
+      document.getElementById('auth-token').value = authToken;
+
+      showStatus('Settings saved.', 'success');
+    }
+
+    async function toggleScanner() {
+      if (isScanning) {
+        stopScanning();
+      } else {
+        startScanning();
+      }
+    }
+
+    async function startScanning() {
+      if (!scriptUrl) {
+        showStatus('Please configure the Google Apps Script URL in settings first', 'error');
+        return;
+      }
+
+      const scanBtn = document.getElementById('scan-toggle');
+      scanBtn.textContent = 'Stop Scanning';
+      scanBtn.classList.add('scanning');
+
+      try {
+        html5QrCode = new Html5Qrcode("reader");
+        await html5QrCode.start(
+          { facingMode: "environment" },
+          { fps: 10, qrbox: { width: 250, height: 250 } },
+          onScanSuccess,
+          onScanError
+        );
+        isScanning = true;
+        showStatus('Camera ready - point at QR code', 'info');
+      } catch (err) {
+        console.error("Error starting scanner:", err);
+        showStatus('Error starting camera: ' + err, 'error');
+        stopScanning();
+      }
+    }
+
+    async function stopScanning() {
+      const scanBtn = document.getElementById('scan-toggle');
+      scanBtn.textContent = 'Start Scanning';
+      scanBtn.classList.remove('scanning');
+
+      if (html5QrCode && isScanning) {
+        try {
+          await html5QrCode.stop();
+          html5QrCode.clear();
+        } catch (err) {
+          console.error("Error stopping scanner:", err);
         }
+      }
+      isScanning = false;
+      hideStatus();
+    }
 
-        function loadSettings() {
-            const savedUrl = localStorage.getItem('scriptUrl');
-            // If nothing is saved yet, use the default (but keep it editable).
-            scriptUrl = savedUrl || DEFAULT_SCRIPT_URL;
-            document.getElementById('script-url').value = scriptUrl;
-        }
+    async function onScanSuccess(decodedText, decodedResult) {
+      await stopScanning();
+      showStatus('Processing checkout...', 'info');
 
-        function saveSettings() {
-            const url = document.getElementById('script-url').value.trim();
+      const qrData = decodedText.trim();
 
-            // If blank, revert to default and clear the saved override.
-            if (!url) {
-                scriptUrl = DEFAULT_SCRIPT_URL;
-                localStorage.removeItem('scriptUrl');
-                document.getElementById('script-url').value = scriptUrl;
-                showStatus('Reverted to default script URL.', 'success');
-                return;
-            }
+      const firstName = localStorage.getItem('firstName') || '';
+      const lastName = localStorage.getItem('lastName') || '';
+      const userName = `${firstName} ${lastName}`.trim();
 
-            scriptUrl = url;
-            localStorage.setItem('scriptUrl', url);
-            showStatus('Settings saved successfully!', 'success');
-        }
+      const now = new Date();
+      const timestamp = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
-        async function toggleScanner() {
-            if (isScanning) {
-                stopScanning();
-            } else {
-                startScanning();
-            }
-        }
+      const deviceId = getOrCreateDeviceId();
+      const rickyAuthToken = localStorage.getItem('rickyAuthToken') || '';
 
-        async function startScanning() {
-            if (!scriptUrl) {
-                showStatus('Please configure the Google Apps Script URL in settings first', 'error');
-                return;
-            }
+      try {
+        await fetch(scriptUrl, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            qrData: qrData,
+            userName: userName,
+            checkedOutBy: userName,
+            checkedOutByHeader: CHECKED_OUT_BY_HEADER,
+            timestamp: timestamp,
+            authToken: authToken,
+            deviceId: deviceId,
+            rickyAuthToken: rickyAuthToken
+          })
+        });
 
-            const scanBtn = document.getElementById('scan-toggle');
-            scanBtn.textContent = 'Stop Scanning';
-            scanBtn.classList.add('scanning');
-            
-            try {
-                html5QrCode = new Html5Qrcode("reader");
-                await html5QrCode.start(
-                    { facingMode: "environment" },
-                    {
-                        fps: 10,
-                        qrbox: { width: 250, height: 250 }
-                    },
-                    onScanSuccess,
-                    onScanError
-                );
-                isScanning = true;
-                showStatus('Camera ready - point at QR code', 'info');
-            } catch (err) {
-                console.error("Error starting scanner:", err);
-                showStatus('Error starting camera: ' + err, 'error');
-                stopScanning();
-            }
-        }
+        showStatus('✓ Equipment checked out successfully!', 'success');
 
-        async function stopScanning() {
-            const scanBtn = document.getElementById('scan-toggle');
-            scanBtn.textContent = 'Start Scanning';
-            scanBtn.classList.remove('scanning');
-            
-            if (html5QrCode && isScanning) {
-                try {
-                    await html5QrCode.stop();
-                    html5QrCode.clear();
-                } catch (err) {
-                    console.error("Error stopping scanner:", err);
-                }
-            }
-            isScanning = false;
-            hideStatus();
-        }
+        document.getElementById('last-scan-details').innerHTML = `
+          <strong>Equipment:</strong> ${qrData}<br>
+          <strong>Checked out by:</strong> ${userName}<br>
+          <strong>Time:</strong> ${timestamp}
+        `;
+        document.getElementById('last-scan').classList.add('show');
+      } catch (error) {
+        console.error('Error updating sheet:', error);
+        showStatus('Error updating checkout. Please try again.', 'error');
+      }
+    }
 
-        async function onScanSuccess(decodedText, decodedResult) {
-            // Stop scanning immediately to prevent multiple scans
-            await stopScanning();
-            
-            showStatus('Processing checkout...', 'info');
-            
-            // Parse QR code data (expecting "EquipmentNameSerialNumber" format)
-            const qrData = decodedText.trim();
-            
-            // Get user info
-            const firstName = localStorage.getItem('firstName');
-            const lastName = localStorage.getItem('lastName');
-            const userName = `${firstName} ${lastName}`;
-            
-            // Get current timestamp
-            const now = new Date();
-            const timestamp = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-            
-            // Send to Google Sheets
-            try {
-                const response = await fetch(scriptUrl, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        qrData: qrData,
-                        // Keep userName for backward compatibility with your existing Apps Script
-                        userName: userName,
-                        // Also send an explicit field + header label so the script can find the correct column even if moved
-                        checkedOutBy: userName,
-                        checkedOutByHeader: CHECKED_OUT_BY_HEADER,
-                        timestamp: timestamp
-                    })
-                });
-                
-                // Note: With no-cors, we can't read the response, but if no error is thrown, it worked
-                showStatus('✓ Equipment checked out successfully!', 'success');
-                
-                // Show last scan info
-                document.getElementById('last-scan-details').innerHTML = `
-                    <strong>Equipment:</strong> ${qrData}<br>
-                    <strong>Checked out by:</strong> ${userName}<br>
-                    <strong>Time:</strong> ${timestamp}
-                `;
-                document.getElementById('last-scan').classList.add('show');
-                
-            } catch (error) {
-                console.error('Error updating sheet:', error);
-                showStatus('Error updating checkout. Please try again.', 'error');
-            }
-        }
+    function onScanError(errorMessage) {
+      // ignore scanner errors
+    }
 
-        function onScanError(errorMessage) {
-            // Ignore scanner errors (they happen frequently while scanning)
-        }
+    function showStatus(message, type) {
+      const statusEl = document.getElementById('status-message');
+      statusEl.textContent = message;
+      statusEl.className = 'status ' + type;
+    }
 
-        function showStatus(message, type) {
-            const statusEl = document.getElementById('status-message');
-            statusEl.textContent = message;
-            statusEl.className = 'status ' + type;
-        }
+    function hideStatus() {
+      const statusEl = document.getElementById('status-message');
+      statusEl.className = 'status';
+    }
 
-        function hideStatus() {
-            const statusEl = document.getElementById('status-message');
-            statusEl.className = 'status';
-        }
-
-        // Service Worker Registration for PWA
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('./sw.js').catch(err => {
-                console.log('Service Worker registration failed:', err);
-            });
-        }
-    </script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').catch(err => {
+        console.log('Service Worker registration failed:', err);
+      });
+    }
+  </script>
 </body>
 </html>
