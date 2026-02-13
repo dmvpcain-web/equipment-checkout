@@ -1,7 +1,7 @@
 // Equipment Checkout Service Worker
 // Note: use relative URLs so GitHub Pages repo sites (/<repo>/...) work correctly.
 
-const CACHE_NAME = 'equipment-checkout-v3';
+const CACHE_NAME = 'equipment-checkout-v4';
 
 const CORE_ASSETS = [
   './equipment-checkout.html',
