@@ -326,7 +326,13 @@
     <script>
         let html5QrCode = null;
         let isScanning = false;
-        let scriptUrl = '';
+
+        // Default Google Apps Script URL (can be edited in Settings)
+        const DEFAULT_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzbQcYm5bdv3mwYAcbnyB3C6k4OGR9oAm5yWDUEU3EZdQG9gmqylpQXy9IXKc2vfiSN/exec';
+        // Column header to target in the sheet (script should locate this header dynamically)
+        const CHECKED_OUT_BY_HEADER = 'Checked Out By';
+
+        let scriptUrl = DEFAULT_SCRIPT_URL;
 
         // Initialize app
         window.onload = function() {
@@ -375,21 +381,26 @@
 
         function loadSettings() {
             const savedUrl = localStorage.getItem('scriptUrl');
-            if (savedUrl) {
-                scriptUrl = savedUrl;
-                document.getElementById('script-url').value = savedUrl;
-            }
+            // If nothing is saved yet, use the default (but keep it editable).
+            scriptUrl = savedUrl || DEFAULT_SCRIPT_URL;
+            document.getElementById('script-url').value = scriptUrl;
         }
 
         function saveSettings() {
             const url = document.getElementById('script-url').value.trim();
-            if (url) {
-                scriptUrl = url;
-                localStorage.setItem('scriptUrl', url);
-                showStatus('Settings saved successfully!', 'success');
-            } else {
-                showStatus('Please enter a valid URL', 'error');
+
+            // If blank, revert to default and clear the saved override.
+            if (!url) {
+                scriptUrl = DEFAULT_SCRIPT_URL;
+                localStorage.removeItem('scriptUrl');
+                document.getElementById('script-url').value = scriptUrl;
+                showStatus('Reverted to default script URL.', 'success');
+                return;
             }
+
+            scriptUrl = url;
+            localStorage.setItem('scriptUrl', url);
+            showStatus('Settings saved successfully!', 'success');
         }
 
         async function toggleScanner() {
@@ -475,7 +486,11 @@
                     },
                     body: JSON.stringify({
                         qrData: qrData,
+                        // Keep userName for backward compatibility with your existing Apps Script
                         userName: userName,
+                        // Also send an explicit field + header label so the script can find the correct column even if moved
+                        checkedOutBy: userName,
+                        checkedOutByHeader: CHECKED_OUT_BY_HEADER,
                         timestamp: timestamp
                     })
                 });
@@ -514,7 +529,7 @@
 
         // Service Worker Registration for PWA
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js').catch(err => {
+            navigator.serviceWorker.register('./sw.js').catch(err => {
                 console.log('Service Worker registration failed:', err);
             });
         }
