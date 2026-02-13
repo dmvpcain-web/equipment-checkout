@@ -327,6 +327,62 @@
         let html5QrCode = null;
         let isScanning = false;
 
+
+// --- Restricted user access (local-only) ---
+// If someone signs in as "Ricky Gonzales" (case-insensitive), require a password once per device,
+// and require again if the name is changed away from Ricky and later changed back.
+const RESTRICTED_FULL_NAME = 'ricky gonzales';
+const RESTRICTED_PASSWORD = 'AAAbattery';
+const RESTRICTED_AUTH_KEY = 'rickyAuth';
+const RESTRICTED_AUTH_NAME_KEY = 'rickyAuthName';
+
+function normalizeName(str) {
+    return (str || '')
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, ' ');
+}
+
+function getNormalizedFullName(firstName, lastName) {
+    return normalizeName(`${firstName} ${lastName}`);
+}
+
+function clearRestrictedAuth() {
+    localStorage.removeItem(RESTRICTED_AUTH_KEY);
+    localStorage.removeItem(RESTRICTED_AUTH_NAME_KEY);
+}
+
+function isRestrictedUser(firstName, lastName) {
+    return getNormalizedFullName(firstName, lastName) === RESTRICTED_FULL_NAME;
+}
+
+// Returns true if access is allowed, false if not (user cancelled or failed).
+function requireRestrictedPasswordIfNeeded(firstName, lastName) {
+    if (!isRestrictedUser(firstName, lastName)) {
+        // If they are NOT Ricky, clear any prior Ricky auth so changing back will prompt again.
+        clearRestrictedAuth();
+        return true;
+    }
+
+    const full = getNormalizedFullName(firstName, lastName);
+    const alreadyAuthed = localStorage.getItem(RESTRICTED_AUTH_KEY) === 'true'
+        && localStorage.getItem(RESTRICTED_AUTH_NAME_KEY) === full;
+
+    if (alreadyAuthed) return true;
+
+    // Prompt up to 3 times. Cancel denies access.
+    for (let attempt = 1; attempt <= 3; attempt++) {
+        const entered = window.prompt('Password required for Ricky Gonzales:');
+        if (entered === null) return false; // cancel
+        if (entered === RESTRICTED_PASSWORD) {
+            localStorage.setItem(RESTRICTED_AUTH_KEY, 'true');
+            localStorage.setItem(RESTRICTED_AUTH_NAME_KEY, full);
+            return true;
+        }
+    }
+    return false;
+}
+
         // Default Google Apps Script URL (can be edited in Settings)
         const DEFAULT_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzbQcYm5bdv3mwYAcbnyB3C6k4OGR9oAm5yWDUEU3EZdQG9gmqylpQXy9IXKc2vfiSN/exec';
         // Column header to target in the sheet (script should locate this header dynamically)
@@ -340,28 +396,48 @@
             checkUser();
         };
 
-        function checkUser() {
-            const firstName = localStorage.getItem('firstName');
-            const lastName = localStorage.getItem('lastName');
-            
-            if (firstName && lastName) {
-                document.getElementById('display-name').textContent = `${firstName} ${lastName}`;
-                document.getElementById('login-section').classList.add('hidden');
-                document.getElementById('scanner-section').style.display = 'block';
-                document.getElementById('user-bar').classList.remove('hidden');
-            }
+        
+function checkUser() {
+    const firstName = localStorage.getItem('firstName');
+    const lastName = localStorage.getItem('lastName');
+
+    if (firstName && lastName) {
+        // Enforce restricted-user password on load (e.g., returning user).
+        const allowed = requireRestrictedPasswordIfNeeded(firstName, lastName);
+        if (!allowed) {
+            // If denied, clear the saved name so they must sign in again.
+            localStorage.removeItem('firstName');
+            localStorage.removeItem('lastName');
+            clearRestrictedAuth();
+            return;
         }
 
-        function saveUser(event) {
-            event.preventDefault();
-            const firstName = document.getElementById('first-name').value.trim();
-            const lastName = document.getElementById('last-name').value.trim();
-            
-            localStorage.setItem('firstName', firstName);
-            localStorage.setItem('lastName', lastName);
-            
-            checkUser();
+        document.getElementById('display-name').textContent = `${firstName} ${lastName}`;
+        document.getElementById('login-section').classList.add('hidden');
+        document.getElementById('scanner-section').style.display = 'block';
+        document.getElementById('user-bar').classList.remove('hidden');
+    }
+}
         }
+
+        
+function saveUser(event) {
+    event.preventDefault();
+    const firstName = document.getElementById('first-name').value.trim();
+    const lastName = document.getElementById('last-name').value.trim();
+
+    // If signing in as Ricky Gonzales (case-insensitive), require password before saving.
+    const allowed = requireRestrictedPasswordIfNeeded(firstName, lastName);
+    if (!allowed) {
+        alert('Access denied: incorrect password or cancelled.');
+        return;
+    }
+
+    localStorage.setItem('firstName', firstName);
+    localStorage.setItem('lastName', lastName);
+
+    checkUser();
+}
 
         function editUser() {
             const firstName = localStorage.getItem('firstName');
