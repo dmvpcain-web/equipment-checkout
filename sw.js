@@ -1,7 +1,7 @@
-const CACHE_NAME = 'equipment-checkout-v1';
+const CACHE_NAME = 'equipment-checkout-v2';
 const urlsToCache = [
-  '/equipment-checkout.html',
-  '/manifest.json',
+  './equipment-checkout.html',
+  './manifest.json',
   'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js'
 ];
 
